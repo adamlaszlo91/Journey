@@ -7,9 +7,9 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
+import javax.net.ssl.SSLHandshakeException;
 
+import org.apache.commons.validator.routines.EmailValidator;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
@@ -18,27 +18,31 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 /**
- * E-mail címeket és további linkeket gyûjtõ osztály.
+ * It's a thread, checks a webpage with a given URL address and collects e-mail
+ * addresses and further URL addresses from it.
  * 
- * @author Ádám László
+ * @author László Ádám
  * 
  */
 public class Crawler implements Runnable {
 	private Thread t;
 	private String link;
 	private Control control;
+	/* JSoup data members */
 	private Document doc;
 	private Elements links;
 	private URL url;
+	/* containers */
 	private ArrayList<String> atReplacements;
 	private ArrayList<String> eMailAddresses;
 	private ArrayList<String> urlAddresses;
 	private ArrayList<String> toThrowAway;
 
 	/**
+	 * Constructor for the Crawler class.
 	 * 
 	 * @param control
-	 *            A Conntrol objektum.
+	 *            The controller object.
 	 */
 	public Crawler(Control control) {
 		this.control = control;
@@ -54,7 +58,7 @@ public class Crawler implements Runnable {
 	}
 
 	/**
-	 * Metódus a szál elindítására.
+	 * Method to start the thread.
 	 */
 	public void start() {
 		this.t = new Thread(this);
@@ -62,24 +66,28 @@ public class Crawler implements Runnable {
 	}
 
 	/**
-	 * Metódus a szál leállítására.
+	 * Method to stop the Thread.
 	 */
 	public void stop() {
 		this.t = null;
 	}
 
+	/**
+	 * The run() method of the thread.<br>
+	 * Collects e-mail and URL addresses from web pages.
+	 */
 	public void run() {
 		Thread thisThread = Thread.currentThread();
 		while (this.t == thisThread) {
-			/* Következõ url beszerzése */
+			/* getting next URL */
 			this.link = this.control.getNextURLAddress();
 			if (this.link != null) {
 				try {
 					url = new URL(link);
 					this.doc = Jsoup.connect(link).get();
-					/* E-mail címek keresése */
+					/* looking for e-mail addresses */
 					this.mailCheck(doc.toString());
-					/* További linkek keresése */
+					/* looking for further URL addresses */
 					this.links = doc.select("a[href]");
 					for (Element elink : this.links) {
 						String l = elink.attr("href");
@@ -93,10 +101,12 @@ public class Crawler implements Runnable {
 							this.urlAddresses.add(l);
 						}
 					}
+					/* ignore these exceptions */
 				} catch (UnknownHostException uhe) {
 				} catch (SocketTimeoutException ste) {
 				} catch (HttpStatusException hse) {
 				} catch (UnsupportedMimeTypeException hse) {
+				} catch (SSLHandshakeException she) {
 				} catch (Exception e) {
 					System.out.println(e);
 				}
@@ -107,6 +117,7 @@ public class Crawler implements Runnable {
 					System.out.println("Crawler: " + e);
 				}
 			}
+			/* delivering gathered information and clearing containers */
 			this.control.addEMailAddresses(this.eMailAddresses);
 			this.control.addURLAddresses(this.urlAddresses);
 			this.eMailAddresses.clear();
@@ -115,21 +126,21 @@ public class Crawler implements Runnable {
 	}
 
 	/**
-	 * E-mail címek keresése.
+	 * Looks for e-mail addresses in a given webpage.
 	 * 
 	 * @param page
-	 *            Az aktuális weboldal szöveges formátumban.
+	 *            The actual webpage in string format.
 	 */
 	public void mailCheck(String page) {
 		String tokens[] = page.split(" ");
 		for (int i = 0; i < tokens.length; i++) {
-			/* Helyettesítõ tokenek visszaállítása */
+			/* restoring substituted tokens */
 			for (int k = 0; k < this.atReplacements.size(); k++) {
 				tokens[i] = tokens[i].replace(this.atReplacements.get(k), "@");
 			}
-			/* "@" karakter keresése */
+			/* looking for "@" character */
 			if (tokens[i].contains("@")) {
-				/* további szûrés */
+				/* further filtering */
 				tokens[i] = this.selectAmongQuotes(tokens[i]);
 				tokens[i] = this.selectAmongLtGt(tokens[i]);
 				tokens[i] = this.selectAmongQuestionMarks(tokens[i]);
@@ -150,22 +161,20 @@ public class Crawler implements Runnable {
 				if (tokens3[0].length() == 0 || tokens3[1].length() == 0) {
 					continue;
 				}
-				try {
-					new InternetAddress(tokens[i]);
+				/* e-mail validation */
+				if (EmailValidator.getInstance().isValid(tokens[i]))
 					this.eMailAddresses.add(tokens[i]);
-				} catch (AddressException ex) {
-					/* Nem mailcim */
-				}
+
 			}
 		}
 	}
 
 	/**
-	 * Eltávolítja a html tageket a szövegbõl.
+	 * Removes HTML tags from a text.
 	 * 
 	 * @param s
-	 *            A szûrni kívánt szöveg.
-	 * @return A szöveg html tagek nélkül.
+	 *            The text to be cleared form HTML tags.
+	 * @return The text without HTML tags.
 	 */
 	private String selectAmongLtGt(String s) {
 		String temp = "";
@@ -183,12 +192,11 @@ public class Crawler implements Runnable {
 	}
 
 	/**
-	 * Kiválasztja a "@" arakterrel rendelkezõ tokent azok közül, amiket
-	 * aposztrófok választanak el.
+	 * Detects and removes tokens separated with apostrophes.
 	 * 
 	 * @param s
-	 *            A szûrni kívánt szöveg.
-	 * @return A "@" karaktert tartalmazó token.
+	 *            A text to be filtered.
+	 * @return The token that contains the "@" character.
 	 */
 	private String selectAmongQuotes(String s) {
 		if (!s.contains("\""))
@@ -202,12 +210,11 @@ public class Crawler implements Runnable {
 	}
 
 	/**
-	 * Kiválasztja a "@" arakterrel rendelkezõ tokent azok közül, amikek
-	 * kérdõjelek választanak el.
+	 * Detects and removes tokens separated with question marks.
 	 * 
 	 * @param s
-	 *            A szûrni kívánt szöveg.
-	 * @return A "@" karaktert tartalmazó token.
+	 *            A text to be filtered.
+	 * @return The token that contains the "?" character.
 	 */
 	private String selectAmongQuestionMarks(String s) {
 		if (!s.contains("?"))
@@ -217,7 +224,6 @@ public class Crawler implements Runnable {
 			if (temp[i].contains("@"))
 				return temp[i];
 		}
-		// may never happen
 		return s;
 	}
 

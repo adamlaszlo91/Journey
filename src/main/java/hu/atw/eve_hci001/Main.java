@@ -3,10 +3,10 @@ package hu.atw.eve_hci001;
 import hu.atw.eve_hci001.control.Control;
 
 /**
- * Main osztály a Journey-hez.
+ * Main class for Journey.
  * 
- * @author Ádám László
- *
+ * @author László Ádám
+ * 
  */
 public class Main {
 

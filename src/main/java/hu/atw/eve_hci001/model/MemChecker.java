@@ -3,9 +3,10 @@ package hu.atw.eve_hci001.model;
 import hu.atw.eve_hci001.view.GUI;
 
 /**
- * Real-time információt ad a memóriaállapotról.
+ * This thread gives real-time information about the memory state and indicates
+ * it on the GUI.
  * 
- * @author Ádám László
+ * @author László Ádám
  * 
  */
 public class MemChecker implements Runnable {
@@ -14,16 +15,17 @@ public class MemChecker implements Runnable {
 	int mB = 1024 * 1024;
 
 	/**
+	 * Constructor for the MemChecker class.
 	 * 
 	 * @param gui
-	 *            A grafikus interfész.
+	 *            The graphical interface.
 	 */
 	public MemChecker(GUI gui) {
 		this.gui = gui;
 	}
 
 	/**
-	 * A szál elindítására szolgáló metódus.
+	 * Method to start the thread.
 	 */
 	public void start() {
 		this.t = new Thread(this);
@@ -31,20 +33,28 @@ public class MemChecker implements Runnable {
 	}
 
 	/**
-	 * A szál leállítására szolgáló metódus.
+	 * Method to stop the thread.
 	 */
 	public void stop() {
 		this.t = null;
 	}
 
+	/**
+	 * 
+	 * @return The Thread data ember of the class.
+	 */
 	public Thread getT() {
 		return this.t;
 	}
 
+	/**
+	 * The run() method of the thread.<br>
+	 * Periodically sends information about the memory state to the GUI object.
+	 */
 	public void run() {
 		Thread thisThread = Thread.currentThread();
 		Runtime runtime = Runtime.getRuntime();
-		/* Várakozás, amíg a GUI kész nem lesz fogadni az adatokat */
+		/* waiting until the GUI is ready to receive the data */
 		try {
 			synchronized (this.t) {
 				this.t.wait();

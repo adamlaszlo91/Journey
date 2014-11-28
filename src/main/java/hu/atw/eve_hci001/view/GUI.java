@@ -11,6 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
@@ -19,9 +20,9 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.text.DefaultCaret;
 
 /**
- * Grafikus interfész a Journey-hez.
+ * Graphical interface for Journey.
  * 
- * @author Ádám László
+ * @author László Ádám
  * 
  */
 public class GUI implements Runnable, ActionListener {
@@ -38,13 +39,22 @@ public class GUI implements Runnable, ActionListener {
 	private JLabel label6;
 	private JScrollPane scroll;
 
+	/**
+	 * Constructor of the GUI class.
+	 * 
+	 * @param control
+	 *            The controller object.
+	 */
 	public GUI(Control control) {
 		this.control = control;
 	}
 
+	/**
+	 * The run() method of the thread. CInitielizes the GUI elements and waits
+	 * for interaction.
+	 */
 	public void run() {
-		/* GUI elemek inicializálása */
-		JFrame frame = new JFrame("Journey 0.2");
+		JFrame frame = new JFrame("Journey 0.2.1");
 		frame.setSize(800, 600);
 		frame.setLayout(null);
 		frame.setResizable(false);
@@ -66,6 +76,7 @@ public class GUI implements Runnable, ActionListener {
 		this.url.setSize(400, 20);
 		this.url.setLocation(55, 10);
 		this.url.setVisible(true);
+		this.url.addActionListener(this);
 		frame.add(this.url);
 
 		JLabel label2 = new JLabel("Threads:");
@@ -145,7 +156,7 @@ public class GUI implements Runnable, ActionListener {
 	}
 
 	/**
-	 * A szál elindítására szolgáló metódus.
+	 * Method to start the thread.
 	 */
 	public void start() {
 		this.t = new Thread(this);
@@ -153,31 +164,45 @@ public class GUI implements Runnable, ActionListener {
 	}
 
 	/**
-	 * A szál leállítására szolgáló metódus.
+	 * MEthod to stop the thread.
 	 */
 	public void stop() {
 		this.t = null;
 	}
 
+	/**
+	 * Handles interactions.
+	 */
 	public void actionPerformed(ActionEvent e) {
-		if (e.getSource() == this.start) {
+		/* on Enter press or Start button press */
+		if (e.getSource() == this.start || e.getSource() == this.url) {
+			if (this.url.getText().equals("")) {
+				JOptionPane.showMessageDialog(null,
+						"Please add a starting URL!", "Error",
+						JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			/* enabling/disabling buttons */
 			this.start.setEnabled(false);
 			this.stop.setEnabled(true);
 			int i = Integer.parseInt(this.threads.getSelectedItem().toString());
+			/* start crawling */
 			this.control.init(this.url.getText(), i);
 		}
 		if (e.getSource() == this.stop) {
+			/* enabling/disabling buttons */
 			this.stop.setEnabled(false);
 			this.start.setEnabled(true);
+			/* stop crawling */
 			this.control.stop();
 		}
 	}
 
 	/**
-	 * Kiírja a megadott szöveget (e-mail címet) az e-mail mezõbe.
+	 * Prints a text (e-mail address) on the GUI.
 	 * 
 	 * @param s
-	 *            A kiírandó szöveg.
+	 *            The text to be printed.
 	 */
 	public synchronized void println(String s) {
 		String text = this.eMails.getText();
@@ -201,14 +226,14 @@ public class GUI implements Runnable, ActionListener {
 	}
 
 	/**
-	 * Információkat közöl az aktuális memóriaállapotról.
+	 * Set informationd about the memory state.
 	 * 
 	 * @param used
-	 *            Használt memória.
+	 *            Uses memory.
 	 * @param available
-	 *            Elérhetõ memória.
+	 *            Available memory.
 	 * @param max
-	 *            A JVM által lefoglalt memória.
+	 *            The memory reserved by the JVM.
 	 */
 	public void setMemData(int used, int available, int max) {
 		this.label6.setText("Memory (MB):  " + used + " / " + available
@@ -216,7 +241,7 @@ public class GUI implements Runnable, ActionListener {
 	}
 
 	/**
-	 * A program bezárásakor meghívódó függvény.
+	 * Exits the program.
 	 */
 	public void close() {
 		this.control.exit();

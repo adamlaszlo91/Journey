@@ -7,9 +7,9 @@ import hu.atw.eve_hci001.view.GUI;
 import java.util.ArrayList;
 
 /**
- * Control osztály a Journey-hez.
+ * Control class for the Journey.
  * 
- * @author Ádám László
+ * @author László Ádám
  * 
  */
 public class Control {
@@ -20,9 +20,13 @@ public class Control {
 	private GUI gui;
 	private MemChecker memChecker;
 	private int linkIndex;
+	/* locks for synchronized blocks */
 	private Object linkSync;
 	private Object mailSync;
 
+	/**
+	 * Constructor for the Control class.
+	 */
 	public Control() {
 		this.linkSync = new Object();
 		this.mailSync = new Object();
@@ -35,15 +39,15 @@ public class Control {
 	}
 
 	/**
-	 * Az e-mail címek keresésének indítása.
+	 * Starts crawling.
 	 * 
 	 * @param url
-	 *            A kiinduló URL.
+	 *            Tha start URL.
 	 * @param maxThreadNum
-	 *            A használt szálak száma.
+	 *            The number of threads to be used.
 	 */
 	public void init(String url, int maxThreadNum) {
-		/* Input url kiegészítése */
+		/* completing input URL */
 		if (!url.startsWith("http://") && !url.startsWith("https://")) {
 			if (url.startsWith("www.")) {
 				url = "http://" + url;
@@ -51,6 +55,7 @@ public class Control {
 				url = "http://www." + url;
 			}
 		}
+		/* clearing containers - crawling may be started multiple times */
 		this.urlAddresses.clear();
 		this.eMailAddresses.clear();
 		this.urlAddresses.add(url);
@@ -59,6 +64,7 @@ public class Control {
 		this.gui.setEMailFound(0);
 		this.gui.setInQueue(0);
 		this.linkIndex = 0;
+		/* initielizing crawlers */
 		this.crawlers = new ArrayList<Crawler>();
 		for (int i = 1; i <= this.maxThreadNum; i++) {
 			Crawler crawler = new Crawler(this);
@@ -70,7 +76,7 @@ public class Control {
 	}
 
 	/**
-	 * A folyamatban lévõ keresés leállítása.
+	 * Stops current crawling.
 	 */
 	public void stop() {
 		for (int i = 0; i < this.maxThreadNum; i++) {
@@ -79,7 +85,7 @@ public class Control {
 	}
 
 	/**
-	 * A program leállítása.
+	 * Exits the program.
 	 */
 	public void exit() {
 		if (this.crawlers != null && this.crawlers.size() != 0) {
@@ -93,10 +99,10 @@ public class Control {
 	}
 
 	/**
-	 * Linkek hozzáadása a várakozási sorhoz.
+	 * Adds URL-s to the queue.
 	 * 
 	 * @param links
-	 *            A hozzáadni kívánt linkek listája.
+	 *            List of the new URL-s.
 	 */
 	public void addURLAddresses(ArrayList<String> links) {
 		synchronized (this.linkSync) {
@@ -109,10 +115,10 @@ public class Control {
 	}
 
 	/**
-	 * Talált e-mail címek hozzáadása.
+	 * Adds e-mail addresses to the found addresses.
 	 * 
 	 * @param eMailAddresses
-	 *            E-mail címek listája.
+	 *            List of e-mail addresses.
 	 */
 	public void addEMailAddresses(ArrayList<String> eMailAddresses) {
 		synchronized (this.mailSync) {
@@ -127,9 +133,9 @@ public class Control {
 	}
 
 	/**
-	 * Visszaadja a várakozási sorban következõ oldal UEL-jét.
+	 * Returns the next URL to be checked.
 	 * 
-	 * @return A következõ átnézendõ oldal webcíme.
+	 * @return URL of the next web page.
 	 */
 	public String getNextURLAddress() {
 		synchronized (this.linkSync) {
@@ -145,8 +151,8 @@ public class Control {
 	}
 
 	/**
-	 * A GUI betöltése után meghívódó függvény, jelzést küld a memória
-	 * figyelõnek.
+	 * Intended to be called when the GUI is ready- <br>
+	 * Starts the memory checker thread.
 	 */
 	public void guiReady() {
 		synchronized (this.memChecker.getT()) {
