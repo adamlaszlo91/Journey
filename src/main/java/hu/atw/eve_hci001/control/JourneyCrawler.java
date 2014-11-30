@@ -1,6 +1,5 @@
-package hu.atw.eve_hci001.model;
+package hu.atw.eve_hci001.control;
 
-import hu.atw.eve_hci001.control.Control;
 
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -24,10 +23,10 @@ import org.jsoup.select.Elements;
  * @author László Ádám
  * 
  */
-public class Crawler implements Runnable {
+public class JourneyCrawler implements Runnable {
 	private Thread t;
 	private String link;
-	private Control control;
+	private JourneyController journeyController;
 	/* JSoup data members */
 	private Document doc;
 	private Elements links;
@@ -39,13 +38,13 @@ public class Crawler implements Runnable {
 	private ArrayList<String> toThrowAway;
 
 	/**
-	 * Constructor for the Crawler class.
+	 * Constructor for the JourneyCrawler class.
 	 * 
-	 * @param control
+	 * @param journeyController
 	 *            The controller object.
 	 */
-	public Crawler(Control control) {
-		this.control = control;
+	public JourneyCrawler(JourneyController journeyController) {
+		this.journeyController = journeyController;
 		this.eMailAddresses = new ArrayList<String>();
 		this.urlAddresses = new ArrayList<String>();
 		this.atReplacements = new ArrayList<String>();
@@ -80,7 +79,7 @@ public class Crawler implements Runnable {
 		Thread thisThread = Thread.currentThread();
 		while (this.t == thisThread) {
 			/* getting next URL */
-			this.link = this.control.getNextURLAddress();
+			this.link = this.journeyController.getNextURLAddress();
 			if (this.link != null) {
 				try {
 					url = new URL(link);
@@ -114,12 +113,12 @@ public class Crawler implements Runnable {
 				try {
 					Thread.sleep(100);
 				} catch (Exception e) {
-					System.out.println("Crawler: " + e);
+					System.out.println("JourneyCrawler: " + e);
 				}
 			}
 			/* delivering gathered information and clearing containers */
-			this.control.addEMailAddresses(this.eMailAddresses);
-			this.control.addURLAddresses(this.urlAddresses);
+			this.journeyController.addEMailAddresses(this.eMailAddresses);
+			this.journeyController.addURLAddresses(this.urlAddresses);
 			this.eMailAddresses.clear();
 			this.urlAddresses.clear();
 		}

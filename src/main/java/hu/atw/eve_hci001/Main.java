@@ -1,6 +1,6 @@
 package hu.atw.eve_hci001;
 
-import hu.atw.eve_hci001.control.Control;
+import hu.atw.eve_hci001.control.JourneyController;
 
 /**
  * Main class for Journey.
@@ -11,7 +11,7 @@ import hu.atw.eve_hci001.control.Control;
 public class Main {
 
 	public static void main(String[] args) {
-		new Control();
+		new JourneyController();
 	}
 
 }

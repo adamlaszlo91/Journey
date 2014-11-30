@@ -1,39 +1,37 @@
 package hu.atw.eve_hci001.control;
 
-import hu.atw.eve_hci001.model.Crawler;
-import hu.atw.eve_hci001.model.MemChecker;
-import hu.atw.eve_hci001.view.GUI;
+import hu.atw.eve_hci001.view.JourneyGUI;
 
 import java.util.ArrayList;
 
 /**
- * Control class for the Journey.
+ * JourneyController class for the Journey.
  * 
  * @author László Ádám
  * 
  */
-public class Control {
+public class JourneyController {
 	private ArrayList<String> urlAddresses;
 	private ArrayList<String> eMailAddresses;
-	private ArrayList<Crawler> crawlers;
+	private ArrayList<JourneyCrawler> journeyCrawlers;
 	private int maxThreadNum;
-	private GUI gui;
-	private MemChecker memChecker;
+	private JourneyGUI journeyGUI;
+	private JourneyMemChecker journeyMemChecker;
 	private int linkIndex;
 	/* locks for synchronized blocks */
 	private Object linkSync;
 	private Object mailSync;
 
 	/**
-	 * Constructor for the Control class.
+	 * Constructor for the JourneyController class.
 	 */
-	public Control() {
+	public JourneyController() {
 		this.linkSync = new Object();
 		this.mailSync = new Object();
-		this.gui = new GUI(this);
-		this.gui.start();
-		this.memChecker = new MemChecker(gui);
-		this.memChecker.start();
+		this.journeyGUI = new JourneyGUI(this);
+		this.journeyGUI.start();
+		this.journeyMemChecker = new JourneyMemChecker(journeyGUI);
+		this.journeyMemChecker.start();
 		this.urlAddresses = new ArrayList<String>();
 		this.eMailAddresses = new ArrayList<String>();
 	}
@@ -60,19 +58,19 @@ public class Control {
 		this.eMailAddresses.clear();
 		this.urlAddresses.add(url);
 		this.maxThreadNum = maxThreadNum;
-		this.gui.setURLChecked(0);
-		this.gui.setEMailFound(0);
-		this.gui.setInQueue(0);
+		this.journeyGUI.setURLChecked(0);
+		this.journeyGUI.setEMailFound(0);
+		this.journeyGUI.setInQueue(0);
 		this.linkIndex = 0;
-		/* initielizing crawlers */
-		this.crawlers = new ArrayList<Crawler>();
+		/* initielizing journeyCrawlers */
+		this.journeyCrawlers = new ArrayList<JourneyCrawler>();
 		for (int i = 1; i <= this.maxThreadNum; i++) {
-			Crawler crawler = new Crawler(this);
-			this.crawlers.add(crawler);
-			crawler.start();
+			JourneyCrawler journeyCrawler = new JourneyCrawler(this);
+			this.journeyCrawlers.add(journeyCrawler);
+			journeyCrawler.start();
 		}
-		this.gui.clearOutput();
-		this.gui.println("Start from:\n" + url + "\n\n");
+		this.journeyGUI.clearOutput();
+		this.journeyGUI.println("Start from:\n" + url + "\n\n");
 	}
 
 	/**
@@ -80,7 +78,7 @@ public class Control {
 	 */
 	public void stop() {
 		for (int i = 0; i < this.maxThreadNum; i++) {
-			this.crawlers.get(i).stop();
+			this.journeyCrawlers.get(i).stop();
 		}
 	}
 
@@ -88,13 +86,13 @@ public class Control {
 	 * Exits the program.
 	 */
 	public void exit() {
-		if (this.crawlers != null && this.crawlers.size() != 0) {
+		if (this.journeyCrawlers != null && this.journeyCrawlers.size() != 0) {
 			for (int i = 0; i < this.maxThreadNum; i++) {
-				this.crawlers.get(i).stop();
+				this.journeyCrawlers.get(i).stop();
 			}
 		}
-		this.memChecker.stop();
-		this.gui.stop();
+		this.journeyMemChecker.stop();
+		this.journeyGUI.stop();
 		System.exit(0);
 	}
 
@@ -125,8 +123,8 @@ public class Control {
 			for (int i = 0; i < eMailAddresses.size(); i++) {
 				if (!this.eMailAddresses.contains(eMailAddresses.get(i))) {
 					this.eMailAddresses.add(eMailAddresses.get(i));
-					this.gui.setEMailFound(this.eMailAddresses.size());
-					this.gui.println(eMailAddresses.get(i));
+					this.journeyGUI.setEMailFound(this.eMailAddresses.size());
+					this.journeyGUI.println(eMailAddresses.get(i));
 				}
 			}
 		}
@@ -142,8 +140,8 @@ public class Control {
 			if (this.urlAddresses.size() > this.linkIndex) {
 				String temp = this.urlAddresses.get(this.linkIndex);
 				this.linkIndex++;
-				this.gui.setURLChecked(this.linkIndex);
-				this.gui.setInQueue(this.urlAddresses.size() - this.linkIndex);
+				this.journeyGUI.setURLChecked(this.linkIndex);
+				this.journeyGUI.setInQueue(this.urlAddresses.size() - this.linkIndex);
 				return temp;
 			}
 			return null;
@@ -151,12 +149,12 @@ public class Control {
 	}
 
 	/**
-	 * Intended to be called when the GUI is ready- <br>
+	 * Intended to be called when the JourneyGUI is ready- <br>
 	 * Starts the memory checker thread.
 	 */
 	public void guiReady() {
-		synchronized (this.memChecker.getT()) {
-			this.memChecker.getT().notify();
+		synchronized (this.journeyMemChecker.getT()) {
+			this.journeyMemChecker.getT().notify();
 		}
 	}
 }

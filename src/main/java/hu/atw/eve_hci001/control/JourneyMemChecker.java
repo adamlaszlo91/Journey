@@ -1,27 +1,27 @@
-package hu.atw.eve_hci001.model;
+package hu.atw.eve_hci001.control;
 
-import hu.atw.eve_hci001.view.GUI;
+import hu.atw.eve_hci001.view.JourneyGUI;
 
 /**
  * This thread gives real-time information about the memory state and indicates
- * it on the GUI.
+ * it on the JourneyGUI.
  * 
  * @author László Ádám
  * 
  */
-public class MemChecker implements Runnable {
+public class JourneyMemChecker implements Runnable {
 	private Thread t;
-	private GUI gui;
+	private JourneyGUI journeyGUI;
 	int mB = 1024 * 1024;
 
 	/**
-	 * Constructor for the MemChecker class.
+	 * Constructor for the JourneyMemChecker class.
 	 * 
-	 * @param gui
+	 * @param journeyGUI
 	 *            The graphical interface.
 	 */
-	public MemChecker(GUI gui) {
-		this.gui = gui;
+	public JourneyMemChecker(JourneyGUI journeyGUI) {
+		this.journeyGUI = journeyGUI;
 	}
 
 	/**
@@ -49,12 +49,12 @@ public class MemChecker implements Runnable {
 
 	/**
 	 * The run() method of the thread.<br>
-	 * Periodically sends information about the memory state to the GUI object.
+	 * Periodically sends information about the memory state to the JourneyGUI object.
 	 */
 	public void run() {
 		Thread thisThread = Thread.currentThread();
 		Runtime runtime = Runtime.getRuntime();
-		/* waiting until the GUI is ready to receive the data */
+		/* waiting until the JourneyGUI is ready to receive the data */
 		try {
 			synchronized (this.t) {
 				this.t.wait();
@@ -64,14 +64,14 @@ public class MemChecker implements Runnable {
 		}
 		while (this.t == thisThread) {
 			try {
-				this.gui.setMemData(
+				this.journeyGUI.setMemData(
 						(int) (runtime.totalMemory() - runtime.freeMemory())
 								/ mB, (int) runtime.totalMemory() / mB,
 						(int) runtime.maxMemory() / mB);
 
 				Thread.sleep(1000);
 			} catch (Exception e) {
-				System.out.println("MemChecker: " + e);
+				System.out.println("JourneyMemChecker: " + e);
 			}
 		}
 	}

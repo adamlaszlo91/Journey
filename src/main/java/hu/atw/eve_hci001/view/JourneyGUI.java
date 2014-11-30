@@ -1,6 +1,6 @@
 package hu.atw.eve_hci001.view;
 
-import hu.atw.eve_hci001.control.Control;
+import hu.atw.eve_hci001.control.JourneyController;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,9 +25,9 @@ import javax.swing.text.DefaultCaret;
  * @author László Ádám
  * 
  */
-public class GUI implements Runnable, ActionListener {
+public class JourneyGUI implements Runnable, ActionListener {
 	private Thread t;
-	private Control control;
+	private JourneyController journeyController;
 	private JButton start;
 	private JButton stop;
 	private JTextField url;
@@ -40,17 +40,17 @@ public class GUI implements Runnable, ActionListener {
 	private JScrollPane scroll;
 
 	/**
-	 * Constructor of the GUI class.
+	 * Constructor of the JourneyGUI class.
 	 * 
-	 * @param control
+	 * @param journeyController
 	 *            The controller object.
 	 */
-	public GUI(Control control) {
-		this.control = control;
+	public JourneyGUI(JourneyController journeyController) {
+		this.journeyController = journeyController;
 	}
 
 	/**
-	 * The run() method of the thread. CInitielizes the GUI elements and waits
+	 * The run() method of the thread. CInitielizes the JourneyGUI elements and waits
 	 * for interaction.
 	 */
 	public void run() {
@@ -152,7 +152,7 @@ public class GUI implements Runnable, ActionListener {
 		frame.add(this.scroll);
 
 		frame.setVisible(true);
-		this.control.guiReady();
+		this.journeyController.guiReady();
 	}
 
 	/**
@@ -187,19 +187,19 @@ public class GUI implements Runnable, ActionListener {
 			this.stop.setEnabled(true);
 			int i = Integer.parseInt(this.threads.getSelectedItem().toString());
 			/* start crawling */
-			this.control.init(this.url.getText(), i);
+			this.journeyController.init(this.url.getText(), i);
 		}
 		if (e.getSource() == this.stop) {
 			/* enabling/disabling buttons */
 			this.stop.setEnabled(false);
 			this.start.setEnabled(true);
 			/* stop crawling */
-			this.control.stop();
+			this.journeyController.stop();
 		}
 	}
 
 	/**
-	 * Prints a text (e-mail address) on the GUI.
+	 * Prints a text (e-mail address) on the JourneyGUI.
 	 * 
 	 * @param s
 	 *            The text to be printed.
@@ -244,7 +244,7 @@ public class GUI implements Runnable, ActionListener {
 	 * Exits the program.
 	 */
 	public void close() {
-		this.control.exit();
+		this.journeyController.exit();
 	}
 
 }
