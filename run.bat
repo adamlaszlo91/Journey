@@ -1,0 +1,1 @@
+java -jar target/Journey-0.2.jar
