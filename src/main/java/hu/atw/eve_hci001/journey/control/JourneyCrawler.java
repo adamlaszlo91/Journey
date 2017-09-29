@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import javax.net.ssl.SSLHandshakeException;
 
 import org.apache.commons.validator.routines.EmailValidator;
+import org.apache.commons.validator.routines.UrlValidator;
+import org.apache.commons.validator.util.ValidatorUtils;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
@@ -78,12 +80,14 @@ public class JourneyCrawler implements Runnable {
 					url = new URL(link);
 					this.doc = Jsoup.connect(link).get();
 					/* Looking for e-mail addresses */
-					this.mailCheck(doc.toString());
+					this.findMails(doc.toString());
 					/* Looking for further URL addresses */
 					this.links = doc.select("a[href]");
 					for (Element elink : this.links) {
 						String l = elink.attr("href");
-						// TODO: White list
+						if (!linkCheck(l)) {
+							continue;
+						}
 						if (!l.startsWith("http")) { // https included
 							this.urlAddresses.add("http://" + url.getHost() + l);
 						} else {
@@ -97,7 +101,7 @@ public class JourneyCrawler implements Runnable {
 				} catch (UnsupportedMimeTypeException hse) {
 				} catch (SSLHandshakeException she) {
 				} catch (Exception e) {
-					System.out.println(e);
+					e.printStackTrace();
 				} finally {
 					/* Delivering gathered information and clearing containers */
 					this.journeyController.addEMailAddresses(this.eMailAddresses);
@@ -117,13 +121,22 @@ public class JourneyCrawler implements Runnable {
 	}
 
 	/**
+	 * White-list filter for links
+	 * 
+	 * @param link
+	 * 
+	 */
+	private boolean linkCheck(String link) {
+		return UrlValidator.getInstance().isValid(link);
+	}
+
+	/**
 	 * Looks for e-mail addresses in a given webpage.
 	 * 
 	 * @param page
 	 *            The actual webpage in string format.
 	 */
-	public void mailCheck(String page) {
-		
+	private void findMails(String page) {
 		Matcher m = Pattern.compile(
 				// Do not delete, already a custom regex
 				"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")(\\[at\\]|\\[kukac\\]|@)(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])")
