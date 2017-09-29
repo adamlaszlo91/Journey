@@ -61,7 +61,7 @@ public class JourneyMemChecker implements Runnable {
 				this.t.wait();
 			}
 		} catch (Exception e) {
-			System.out.println(e);
+			e.printStackTrace();
 		}
 		while (this.t == thisThread) {
 			try {
@@ -70,7 +70,7 @@ public class JourneyMemChecker implements Runnable {
 
 				Thread.sleep(1000);
 			} catch (Exception e) {
-				System.out.println("JourneyMemChecker: " + e);
+				e.printStackTrace();
 			}
 		}
 	}

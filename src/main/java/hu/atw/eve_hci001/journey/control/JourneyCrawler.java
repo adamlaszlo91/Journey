@@ -33,10 +33,8 @@ public class JourneyCrawler implements Runnable {
 	private Elements links;
 	private URL url;
 	/* Containers */
-	private ArrayList<String> atReplacements;
 	private ArrayList<String> eMailAddresses;
 	private ArrayList<String> urlAddresses;
-	private ArrayList<String> toThrowAway;
 
 	/**
 	 * Constructor for the JourneyCrawler class.
@@ -48,13 +46,6 @@ public class JourneyCrawler implements Runnable {
 		this.journeyController = journeyController;
 		this.eMailAddresses = new ArrayList<String>();
 		this.urlAddresses = new ArrayList<String>();
-		this.atReplacements = new ArrayList<String>();
-		this.atReplacements.add("[kukac]");
-		this.atReplacements.add("[at]");
-		this.toThrowAway = new ArrayList<String>();
-		this.toThrowAway.add("mailto:");
-		this.toThrowAway.add("href:");
-		this.toThrowAway.add("%20");
 	}
 
 	/**
@@ -87,19 +78,18 @@ public class JourneyCrawler implements Runnable {
 					this.doc = Jsoup.connect(link).get();
 					/* Looking for e-mail addresses */
 					this.mailCheck(doc.toString());
-					/* looking for further URL addresses */
+					/* Looking for further URL addresses */
 					this.links = doc.select("a[href]");
 					for (Element elink : this.links) {
 						String l = elink.attr("href");
-						if (l.contains("javascript") || l.contains("mailto:") || url.getHost().equals(""))
-							continue;
-						if (!l.startsWith("http")) {
+						// TODO: White list
+						if (!l.startsWith("http")) { // https included
 							this.urlAddresses.add("http://" + url.getHost() + l);
 						} else {
 							this.urlAddresses.add(l);
 						}
 					}
-					/* ignore these exceptions */
+					/* Ignore these exceptions */
 				} catch (UnknownHostException uhe) {
 				} catch (SocketTimeoutException ste) {
 				} catch (HttpStatusException hse) {
@@ -107,19 +97,21 @@ public class JourneyCrawler implements Runnable {
 				} catch (SSLHandshakeException she) {
 				} catch (Exception e) {
 					System.out.println(e);
+				} finally {
+					/* Delivering gathered information and clearing containers */
+					this.journeyController.addEMailAddresses(this.eMailAddresses);
+					this.journeyController.addURLAddresses(this.urlAddresses);
+					this.eMailAddresses.clear();
+					this.urlAddresses.clear();
 				}
 			} else {
 				try {
-					Thread.sleep(100);
+					Thread.sleep(50);
 				} catch (Exception e) {
-					System.out.println("JourneyCrawler: " + e);
+					e.printStackTrace();
 				}
 			}
-			/* delivering gathered information and clearing containers */
-			this.journeyController.addEMailAddresses(this.eMailAddresses);
-			this.journeyController.addURLAddresses(this.urlAddresses);
-			this.eMailAddresses.clear();
-			this.urlAddresses.clear();
+
 		}
 	}
 
@@ -140,6 +132,5 @@ public class JourneyCrawler implements Runnable {
 			}
 		}
 	}
-
 
 }
