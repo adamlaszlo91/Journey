@@ -50,8 +50,8 @@ public class JourneyGUI implements Runnable, ActionListener {
 	}
 
 	/**
-	 * The run() method of the thread. CInitielizes the JourneyGUI elements and waits
-	 * for interaction.
+	 * The run() method of the thread. CInitielizes the JourneyGUI elements and
+	 * waits for interaction.
 	 */
 	public void run() {
 		JFrame frame = new JFrame("Journey 0.2.1");
@@ -139,8 +139,7 @@ public class JourneyGUI implements Runnable, ActionListener {
 
 		this.eMails = new JTextArea();
 		this.scroll = new JScrollPane(this.eMails);
-		this.scroll
-				.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		this.scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		this.scroll.setLocation(10, 100);
 		this.scroll.setSize(775, 430);
 		this.scroll.setVisible(true);
@@ -177,9 +176,7 @@ public class JourneyGUI implements Runnable, ActionListener {
 		/* on Enter press or Start button press */
 		if (e.getSource() == this.start || e.getSource() == this.url) {
 			if (this.url.getText().equals("")) {
-				JOptionPane.showMessageDialog(null,
-						"Please add a starting URL!", "Error",
-						JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(null, "Please add a starting URL!", "Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			/* enabling/disabling buttons */
@@ -236,8 +233,7 @@ public class JourneyGUI implements Runnable, ActionListener {
 	 *            The memory reserved by the JVM.
 	 */
 	public void setMemData(int used, int available, int max) {
-		this.label6.setText("Memory (MB):  " + used + " / " + available
-				+ "     Max: " + max);
+		this.label6.setText("Memory (MB):  " + used + " / " + available + "     Max: " + max);
 	}
 
 	/**

@@ -3,8 +3,8 @@ package hu.atw.eve_hci001.journey.control;
 import hu.atw.eve_hci001.journey.view.JourneyGUI;
 
 /**
- * This thread gives real-time information about the memory state and indicates
- * it on the JourneyGUI.
+ * This thread gives real-time information about the memory state and shows it
+ * on the JourneyGUI.
  * 
  * @author László Ádám
  * 
@@ -41,7 +41,7 @@ public class JourneyMemChecker implements Runnable {
 
 	/**
 	 * 
-	 * @return The Thread data ember of the class.
+	 * @return The Thread data member of the class.
 	 */
 	public Thread getT() {
 		return this.t;
@@ -49,12 +49,13 @@ public class JourneyMemChecker implements Runnable {
 
 	/**
 	 * The run() method of the thread.<br>
-	 * Periodically sends information about the memory state to the JourneyGUI object.
+	 * Periodically sends information about the memory state to the JourneyGUI
+	 * object.
 	 */
 	public void run() {
 		Thread thisThread = Thread.currentThread();
 		Runtime runtime = Runtime.getRuntime();
-		/* waiting until the JourneyGUI is ready to receive the data */
+		/* Waiting until the JourneyGUI is ready to receive the data */
 		try {
 			synchronized (this.t) {
 				this.t.wait();
@@ -64,10 +65,8 @@ public class JourneyMemChecker implements Runnable {
 		}
 		while (this.t == thisThread) {
 			try {
-				this.journeyGUI.setMemData(
-						(int) (runtime.totalMemory() - runtime.freeMemory())
-								/ mB, (int) runtime.totalMemory() / mB,
-						(int) runtime.maxMemory() / mB);
+				this.journeyGUI.setMemData((int) (runtime.totalMemory() - runtime.freeMemory()) / mB,
+						(int) runtime.totalMemory() / mB, (int) runtime.maxMemory() / mB);
 
 				Thread.sleep(1000);
 			} catch (Exception e) {

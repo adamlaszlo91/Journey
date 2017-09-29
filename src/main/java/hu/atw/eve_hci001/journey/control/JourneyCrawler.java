@@ -1,10 +1,11 @@
 package hu.atw.eve_hci001.journey.control;
 
-
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLHandshakeException;
 
@@ -31,7 +32,7 @@ public class JourneyCrawler implements Runnable {
 	private Document doc;
 	private Elements links;
 	private URL url;
-	/* containers */
+	/* Containers */
 	private ArrayList<String> atReplacements;
 	private ArrayList<String> eMailAddresses;
 	private ArrayList<String> urlAddresses;
@@ -72,30 +73,28 @@ public class JourneyCrawler implements Runnable {
 	}
 
 	/**
-	 * The run() method of the thread.<br>
-	 * Collects e-mail and URL addresses from web pages.
+	 * The run() method of the thread. Collects e-mail and URL addresses from web
+	 * pages.
 	 */
 	public void run() {
 		Thread thisThread = Thread.currentThread();
 		while (this.t == thisThread) {
-			/* getting next URL */
+			/* Getting next URL */
 			this.link = this.journeyController.getNextURLAddress();
 			if (this.link != null) {
 				try {
 					url = new URL(link);
 					this.doc = Jsoup.connect(link).get();
-					/* looking for e-mail addresses */
+					/* Looking for e-mail addresses */
 					this.mailCheck(doc.toString());
 					/* looking for further URL addresses */
 					this.links = doc.select("a[href]");
 					for (Element elink : this.links) {
 						String l = elink.attr("href");
-						if (l.contains("javascript") || l.contains("mailto:")
-								|| url.getHost().equals(""))
+						if (l.contains("javascript") || l.contains("mailto:") || url.getHost().equals(""))
 							continue;
 						if (!l.startsWith("http")) {
-							this.urlAddresses
-									.add("http://" + url.getHost() + l);
+							this.urlAddresses.add("http://" + url.getHost() + l);
 						} else {
 							this.urlAddresses.add(l);
 						}
@@ -131,99 +130,16 @@ public class JourneyCrawler implements Runnable {
 	 *            The actual webpage in string format.
 	 */
 	public void mailCheck(String page) {
-		String tokens[] = page.split(" ");
-		for (int i = 0; i < tokens.length; i++) {
-			/* restoring substituted tokens */
-			for (int k = 0; k < this.atReplacements.size(); k++) {
-				tokens[i] = tokens[i].replace(this.atReplacements.get(k), "@");
-			}
-			/* looking for "@" character */
-			if (tokens[i].contains("@")) {
-				/* further filtering */
-				tokens[i] = this.selectAmongQuotes(tokens[i]);
-				tokens[i] = this.selectAmongLtGt(tokens[i]);
-				tokens[i] = this.selectAmongQuestionMarks(tokens[i]);
-				for (int k = 0; k < this.toThrowAway.size(); k++) {
-					tokens[i] = tokens[i].replace(this.toThrowAway.get(k), "");
-				}
-				String tokens2[] = tokens[i].split("@");
-				if (tokens2.length != 2) {
-					continue;
-				}
-				if (tokens2[0].length() == 0 || tokens2[1].length() == 0) {
-					continue;
-				}
-				String tokens3[] = tokens2[1].split("\\.");
-				if (tokens3.length != 2) {
-					continue;
-				}
-				if (tokens3[0].length() == 0 || tokens3[1].length() == 0) {
-					continue;
-				}
-				/* e-mail validation */
-				if (EmailValidator.getInstance().isValid(tokens[i]))
-					this.eMailAddresses.add(tokens[i]);
-
+		Matcher m = Pattern.compile(
+				// Do not delete, already a custom regex
+				"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")(\\[at\\]|\\[kukac\\]|@)(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])")
+				.matcher(page);
+		while (m.find()) {
+			if (EmailValidator.getInstance().isValid(m.group())) {
+				this.eMailAddresses.add(m.group());
 			}
 		}
 	}
 
-	/**
-	 * Removes HTML tags from a text.
-	 * 
-	 * @param s
-	 *            The text to be cleared form HTML tags.
-	 * @return The text without HTML tags.
-	 */
-	private String selectAmongLtGt(String s) {
-		String temp = "";
-		int c = 0;
-		for (int i = 0; i < s.length(); i++) {
-			if (s.charAt(i) == '<') {
-				c++;
-			} else if (s.charAt(i) == '>') {
-				c--;
-			} else if (c == 0) {
-				temp = temp + s.charAt(i);
-			}
-		}
-		return temp;
-	}
-
-	/**
-	 * Detects and removes tokens separated with apostrophes.
-	 * 
-	 * @param s
-	 *            A text to be filtered.
-	 * @return The token that contains the "@" character.
-	 */
-	private String selectAmongQuotes(String s) {
-		if (!s.contains("\""))
-			return s;
-		String[] temp = s.split("\"");
-		for (int i = 0; i < temp.length; i++) {
-			if (temp[i].contains("@"))
-				return temp[i];
-		}
-		return s;
-	}
-
-	/**
-	 * Detects and removes tokens separated with question marks.
-	 * 
-	 * @param s
-	 *            A text to be filtered.
-	 * @return The token that contains the "?" character.
-	 */
-	private String selectAmongQuestionMarks(String s) {
-		if (!s.contains("?"))
-			return s;
-		String[] temp = s.split("\\?");
-		for (int i = 0; i < temp.length; i++) {
-			if (temp[i].contains("@"))
-				return temp[i];
-		}
-		return s;
-	}
 
 }
