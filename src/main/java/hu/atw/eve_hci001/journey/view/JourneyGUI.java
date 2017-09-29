@@ -1,6 +1,4 @@
-package hu.atw.eve_hci001.view;
-
-import hu.atw.eve_hci001.control.JourneyController;
+package hu.atw.eve_hci001.journey.view;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,6 +16,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.text.DefaultCaret;
+
+import hu.atw.eve_hci001.journey.control.JourneyController;
 
 /**
  * Graphical interface for Journey.

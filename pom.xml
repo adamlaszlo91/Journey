@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>hu.atw.eve_hci001</groupId>
+	<groupId>hu.atw.eve_hci001.journey</groupId>
 	<artifactId>journey</artifactId>
 	<version>0.2</version>
 	<name>Journey</name>
@@ -17,7 +17,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
-							<mainClass>hu.atw.eve_hci001.Main</mainClass>
+							<mainClass>hu.atw.eve_hci001.journey.Main</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -36,7 +36,7 @@
 				<artifactId>maven-dependency-plugin</artifactId>
 				<version>2.1</version>
 				<executions>
-				    <!-- ignore this warning -->
+					<!-- ignore this warning -->
 					<execution>
 						<id>copy-dependencies</id>
 						<phase>package</phase>
@@ -58,12 +58,12 @@
 		<dependency>
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
-			<version>1.8.1</version>
+			<version>1.10.3</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-validator</groupId>
 			<artifactId>commons-validator</artifactId>
-			<version>1.4.0</version>
+			<version>1.5.0</version>
 		</dependency>
 	</dependencies>
 </project>

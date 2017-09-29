@@ -1,6 +1,6 @@
-package hu.atw.eve_hci001;
+package hu.atw.eve_hci001.journey;
 
-import hu.atw.eve_hci001.control.JourneyController;
+import hu.atw.eve_hci001.journey.control.JourneyController;
 
 /**
  * Main class for Journey.
