@@ -1,8 +1,8 @@
-package hu.atw.eve_hci001.control;
-
-import hu.atw.eve_hci001.view.JourneyGUI;
+package hu.atw.eve_hci001.journey.control;
 
 import java.util.ArrayList;
+
+import hu.atw.eve_hci001.journey.view.JourneyGUI;
 
 /**
  * JourneyController class for the Journey.

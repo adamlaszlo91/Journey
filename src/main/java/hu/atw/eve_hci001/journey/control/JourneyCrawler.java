@@ -1,4 +1,4 @@
-package hu.atw.eve_hci001.control;
+package hu.atw.eve_hci001.journey.control;
 
 
 import java.net.SocketTimeoutException;

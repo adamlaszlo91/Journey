@@ -1,6 +1,6 @@
-package hu.atw.eve_hci001.control;
+package hu.atw.eve_hci001.journey.control;
 
-import hu.atw.eve_hci001.view.JourneyGUI;
+import hu.atw.eve_hci001.journey.view.JourneyGUI;
 
 /**
  * This thread gives real-time information about the memory state and indicates
