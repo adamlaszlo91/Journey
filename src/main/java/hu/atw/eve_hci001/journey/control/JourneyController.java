@@ -125,6 +125,7 @@ public class JourneyController {
 					this.eMailAddresses.add(eMailAddresses.get(i));
 					this.journeyGUI.setEMailFound(this.eMailAddresses.size());
 					this.journeyGUI.println(eMailAddresses.get(i));
+					JourneyFileManager.getInstance().saveEmal(eMailAddresses.get(i));
 				}
 			}
 		}

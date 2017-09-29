@@ -1,5 +1,7 @@
 package hu.atw.eve_hci001.journey.control;
 
+import java.net.ConnectException;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -9,7 +11,6 @@ import javax.net.ssl.SSLHandshakeException;
 
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.apache.commons.validator.util.ValidatorUtils;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.UnsupportedMimeTypeException;
@@ -100,6 +101,8 @@ public class JourneyCrawler implements Runnable {
 				} catch (HttpStatusException hse) {
 				} catch (UnsupportedMimeTypeException hse) {
 				} catch (SSLHandshakeException she) {
+				} catch (ConnectException ce) {
+				} catch (SocketException se) {
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
