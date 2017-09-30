@@ -21,27 +21,28 @@ import org.jsoup.select.Elements;
 import com.google.re2j.Matcher;
 import com.google.re2j.Pattern;
 
+import hu.atw.eve_hci001.journey.util.AbstractRunnableThread;
+
 /**
- * It's a thread, checks a webpage with a given URL address and collects e-mail
- * addresses and further URL addresses from it.
+ * Checks a webpage with a given URL address and collects e-mail addresses and
+ * further URL addresses from it.
  * 
  * @author László Ádám
  * 
  */
-public class JourneyCrawler implements Runnable {
-	private Thread t;
-	private String link;
+public class JourneyCrawler extends AbstractRunnableThread {
+
+	private String currentLink;
 	private JourneyController journeyController;
-	/* JSoup data members */
-	private Document doc;
-	private Elements links;
-	private URL url;
-	/* Containers */
 	private ArrayList<String> eMailAddresses;
 	private ArrayList<String> urlAddresses;
 
+	private Document doc;
+	private Elements collectedLinks;
+	private URL url;
+
 	/**
-	 * Constructor for the JourneyCrawler class.
+	 * Constructor
 	 * 
 	 * @param journeyController
 	 *            The controller object.
@@ -53,83 +54,65 @@ public class JourneyCrawler implements Runnable {
 	}
 
 	/**
-	 * Method to start the thread.
+	 * Collects e-mail and URL addresses from web pages.
 	 */
-	public void start() {
-		this.t = new Thread(this);
-		this.t.start();
-	}
-
-	/**
-	 * Method to stop the Thread.
-	 */
-	public void stop() {
-		this.t = null;
-	}
-
-	/**
-	 * The run() method of the thread. Collects e-mail and URL addresses from web
-	 * pages.
-	 */
-	public void run() {
-		Thread thisThread = Thread.currentThread();
-		while (this.t == thisThread) {
-			/* Getting next URL */
-			this.link = this.journeyController.getNextURLAddress();
-			if (this.link != null) {
-				try {
-					url = new URL(link);
-					this.doc = Jsoup.connect(link).get();
-					/* Looking for e-mail addresses */
-					this.findMails(doc.toString());
-					/* Looking for further URL addresses */
-					this.links = doc.select("a[href]");
-					for (Element elink : this.links) {
-						String l = elink.attr("href");
-						if (!linkCheck(l)) {
-							continue;
-						}
-						if (!l.startsWith("http")) { // https included
-							this.urlAddresses.add("http://" + url.getHost() + l);
-						} else {
-							this.urlAddresses.add(l);
-						}
+	public void performRun() {
+		// Get next available URL from the controller
+		this.currentLink = this.journeyController.getNextURLAddress();
+		if (this.currentLink != null) {
+			try {
+				this.url = new URL(currentLink);
+				this.doc = Jsoup.connect(currentLink).get();
+				/* Looking for e-mail addresses */
+				this.findEmailAddresses(doc.toString());
+				/* Looking for further URL addresses */
+				this.collectedLinks = doc.select("a[href]");
+				for (Element elink : this.collectedLinks) {
+					String link = elink.attr("href");
+					if (!checkLink(link)) {
+						continue;
 					}
-					/* Ignore these exceptions */
-				} catch (UnknownHostException uhe) {
-				} catch (SocketTimeoutException ste) {
-				} catch (HttpStatusException hse) {
-				} catch (UnsupportedMimeTypeException hse) {
-				} catch (SSLHandshakeException she) {
-				} catch (ConnectException ce) {
-				} catch (SocketException se) {
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					/* Delivering gathered information and clearing containers */
-					this.journeyController.addEMailAddresses(this.eMailAddresses);
-					this.journeyController.addURLAddresses(this.urlAddresses);
-					this.eMailAddresses.clear();
-					this.urlAddresses.clear();
+					if (!link.startsWith("http")) { // https included, may not work
+						this.urlAddresses.add("http://" + url.getHost() + link);
+					} else {
+						this.urlAddresses.add(link);
+					}
 				}
-			} else {
-				try {
-					Thread.sleep(50);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				/* Ignore these exceptions */
+			} catch (UnknownHostException uhe) {
+			} catch (SocketTimeoutException ste) {
+			} catch (HttpStatusException hse) {
+			} catch (UnsupportedMimeTypeException hse) {
+			} catch (SSLHandshakeException she) {
+			} catch (ConnectException ce) {
+			} catch (SocketException se) {
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				/* Delivering gathered information and clearing containers */
+				this.journeyController.addEMailAddresses(this.eMailAddresses);
+				this.journeyController.addURLAddresses(this.urlAddresses);
+				this.eMailAddresses.clear();
+				this.urlAddresses.clear();
 			}
-
+		} else {
+			// There is no link in the queue
+			try {
+				Thread.sleep(50);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
+
 	}
 
 	/**
-	 * White-list filter for links
+	 * Checks if the found link is valid
 	 * 
 	 * @param link
 	 * 
 	 */
-	private boolean linkCheck(String link) {
+	private boolean checkLink(String link) {
 		return UrlValidator.getInstance().isValid(link);
 	}
 
@@ -139,7 +122,7 @@ public class JourneyCrawler implements Runnable {
 	 * @param page
 	 *            The actual webpage in string format.
 	 */
-	private void findMails(String page) {
+	private void findEmailAddresses(String page) {
 		Matcher m = Pattern.compile(
 				// Do not delete, already a custom regex
 				"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")(\\[at\\]|\\[kukac\\]|@)(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])")
