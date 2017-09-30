@@ -1,5 +1,6 @@
 package hu.atw.eve_hci001.journey.control;
 
+import hu.atw.eve_hci001.journey.util.AbstractRunnableThread;
 import hu.atw.eve_hci001.journey.view.JourneyGUI;
 
 /**
@@ -9,13 +10,13 @@ import hu.atw.eve_hci001.journey.view.JourneyGUI;
  * @author László Ádám
  * 
  */
-public class JourneyMemChecker implements Runnable {
-	private Thread t;
+public class JourneyMemChecker extends AbstractRunnableThread {
 	private JourneyGUI journeyGUI;
-	int mB = 1024 * 1024;
+	long mB = 1024 * 1024;
+	boolean guiStarted;
 
 	/**
-	 * Constructor for the JourneyMemChecker class.
+	 * for the JourneyMemChecker class.
 	 * 
 	 * @param journeyGUI
 	 *            The graphical interface.
@@ -25,53 +26,29 @@ public class JourneyMemChecker implements Runnable {
 	}
 
 	/**
-	 * Method to start the thread.
-	 */
-	public void start() {
-		this.t = new Thread(this);
-		this.t.start();
-	}
-
-	/**
-	 * Method to stop the thread.
-	 */
-	public void stop() {
-		this.t = null;
-	}
-
-	/**
-	 * 
-	 * @return The Thread data member of the class.
-	 */
-	public Thread getT() {
-		return this.t;
-	}
-
-	/**
-	 * The run() method of the thread.<br>
 	 * Periodically sends information about the memory state to the JourneyGUI
 	 * object.
 	 */
-	public void run() {
-		Thread thisThread = Thread.currentThread();
-		Runtime runtime = Runtime.getRuntime();
+	public void performRun() {
 		/* Waiting until the JourneyGUI is ready to receive the data */
-		try {
-			synchronized (this.t) {
-				this.t.wait();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		while (this.t == thisThread) {
+		if (!guiStarted) {
 			try {
-				this.journeyGUI.setMemData((int) (runtime.totalMemory() - runtime.freeMemory()) / mB,
-						(int) runtime.totalMemory() / mB, (int) runtime.maxMemory() / mB);
-
-				Thread.sleep(1000);
+				synchronized (this.getThread()) {
+					this.getThread().wait();
+					guiStarted = true;
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		try {
+			Runtime runtime = Runtime.getRuntime();
+			this.journeyGUI.setMemData((runtime.totalMemory() - runtime.freeMemory()) / mB, runtime.totalMemory() / mB,
+					runtime.maxMemory() / mB);
+			Thread.sleep(1000);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
+
 }

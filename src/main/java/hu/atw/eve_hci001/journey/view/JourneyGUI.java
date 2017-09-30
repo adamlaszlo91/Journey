@@ -151,7 +151,7 @@ public class JourneyGUI implements Runnable, ActionListener {
 		frame.add(this.scroll);
 
 		frame.setVisible(true);
-		this.journeyController.guiReady();
+		this.journeyController.onGUIReady();
 	}
 
 	/**
@@ -184,14 +184,14 @@ public class JourneyGUI implements Runnable, ActionListener {
 			this.stop.setEnabled(true);
 			int i = Integer.parseInt(this.threads.getSelectedItem().toString());
 			/* start crawling */
-			this.journeyController.init(this.url.getText(), i);
+			this.journeyController.startCrawling(this.url.getText(), i);
 		}
 		if (e.getSource() == this.stop) {
 			/* enabling/disabling buttons */
 			this.stop.setEnabled(false);
 			this.start.setEnabled(true);
 			/* stop crawling */
-			this.journeyController.stop();
+			this.journeyController.stopCrawling();
 		}
 	}
 
@@ -232,7 +232,7 @@ public class JourneyGUI implements Runnable, ActionListener {
 	 * @param max
 	 *            The memory reserved by the JVM.
 	 */
-	public void setMemData(int used, int available, int max) {
+	public void setMemData(long used, long available, long max) {
 		this.label6.setText("Memory (MB):  " + used + " / " + available + "     Max: " + max);
 	}
 

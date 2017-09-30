@@ -15,71 +15,84 @@ public class JourneyController {
 	private CombinedList<String> urlAddresses;
 	private CombinedList<String> eMailAddresses;
 	private ArrayList<JourneyCrawler> journeyCrawlers;
-	private int maxThreadNum;
+
 	private JourneyGUI journeyGUI;
 	private JourneyMemChecker journeyMemChecker;
+
+	private int threadNum;
 	private int linkIndex;
-	/* locks for synchronized blocks */
-	private Object linkSync;
-	private Object mailSync;
+
+	private Object linkLock;
+	private Object mailLock;
 
 	/**
-	 * Constructor for the JourneyController class.
+	 * Constructor
 	 */
 	public JourneyController() {
-		this.linkSync = new Object();
-		this.mailSync = new Object();
+		this.linkLock = new Object();
+		this.mailLock = new Object();
 		this.journeyGUI = new JourneyGUI(this);
 		this.journeyGUI.start();
 		this.journeyMemChecker = new JourneyMemChecker(journeyGUI);
 		this.journeyMemChecker.start();
 		this.urlAddresses = new CombinedList<String>();
 		this.eMailAddresses = new CombinedList<String>();
+		this.journeyCrawlers = new ArrayList<JourneyCrawler>();
+	}
+
+	/**
+	 * Cleans up data
+	 */
+	private void clean() {
+		this.urlAddresses.clear();
+		this.eMailAddresses.clear();
+		this.journeyCrawlers.clear();
+		this.journeyGUI.setURLChecked(0);
+		this.journeyGUI.setEMailFound(0);
+		this.journeyGUI.setInQueue(0);
+		this.linkIndex = -1;
 	}
 
 	/**
 	 * Starts crawling.
 	 * 
-	 * @param url
-	 *            Tha start URL.
+	 * @param startURL
+	 *            The start URL.
 	 * @param maxThreadNum
 	 *            The number of threads to be used.
 	 */
-	public void init(String url, int maxThreadNum) {
-		/* completing input URL */
-		if (!url.startsWith("http://") && !url.startsWith("https://")) {
-			if (url.startsWith("www.")) {
-				url = "http://" + url;
+	public void startCrawling(String startURL, int threadNum) {
+		stopCrawling();
+		clean();
+
+		// Add protocol
+		if (!startURL.startsWith("http://") && !startURL.startsWith("https://")) { // https? meh...
+			if (startURL.startsWith("www.")) {
+				startURL = "http://" + startURL;
 			} else {
-				url = "http://www." + url;
+				startURL = "http://www." + startURL;
 			}
 		}
-		/* clearing containers - crawling may be started multiple times */
-		this.urlAddresses.clear();
-		this.eMailAddresses.clear();
-		this.urlAddresses.add(url);
-		this.maxThreadNum = maxThreadNum;
-		this.journeyGUI.setURLChecked(0);
-		this.journeyGUI.setEMailFound(0);
-		this.journeyGUI.setInQueue(0);
-		this.linkIndex = 0;
-		/* initielizing journeyCrawlers */
-		this.journeyCrawlers = new ArrayList<JourneyCrawler>();
-		for (int i = 1; i <= this.maxThreadNum; i++) {
+		this.urlAddresses.add(startURL);
+		this.threadNum = threadNum;
+
+		this.journeyGUI.clearOutput();
+		this.journeyGUI.println("Start from:\n" + startURL + "\n\n");
+
+		/* Initializing crawlers */
+		for (int i = 1; i <= this.threadNum; i++) {
 			JourneyCrawler journeyCrawler = new JourneyCrawler(this);
 			this.journeyCrawlers.add(journeyCrawler);
 			journeyCrawler.start();
 		}
-		this.journeyGUI.clearOutput();
-		this.journeyGUI.println("Start from:\n" + url + "\n\n");
 	}
 
 	/**
 	 * Stops current crawling.
 	 */
-	public void stop() {
-		for (int i = 0; i < this.maxThreadNum; i++) {
-			this.journeyCrawlers.get(i).stop();
+	public void stopCrawling() {
+		for (JourneyCrawler crawler : this.journeyCrawlers) {
+			crawler.stop();
 		}
 	}
 
@@ -87,11 +100,7 @@ public class JourneyController {
 	 * Exits the program.
 	 */
 	public void exit() {
-		if (this.journeyCrawlers != null && this.journeyCrawlers.size() != 0) {
-			for (int i = 0; i < this.maxThreadNum; i++) {
-				this.journeyCrawlers.get(i).stop();
-			}
-		}
+		stopCrawling();
 		this.journeyMemChecker.stop();
 		this.journeyGUI.stop();
 		System.exit(0);
@@ -104,10 +113,10 @@ public class JourneyController {
 	 *            List of the new URL-s.
 	 */
 	public void addURLAddresses(CombinedList<String> links) {
-		synchronized (this.linkSync) {
-			for (int i = 0; i < links.size(); i++) {
-				if (!this.urlAddresses.contains(links.get(i))) {
-					this.urlAddresses.add(links.get(i));
+		synchronized (this.linkLock) {
+			for (String link : links) {
+				if (!this.urlAddresses.contains(link)) {
+					this.urlAddresses.add(link);
 				}
 			}
 		}
@@ -120,13 +129,13 @@ public class JourneyController {
 	 *            List of e-mail addresses.
 	 */
 	public void addEMailAddresses(CombinedList<String> eMailAddresses) {
-		synchronized (this.mailSync) {
-			for (int i = 0; i < eMailAddresses.size(); i++) {
-				if (!this.eMailAddresses.contains(eMailAddresses.get(i))) {
-					this.eMailAddresses.add(eMailAddresses.get(i));
+		synchronized (this.mailLock) {
+			for (String email : eMailAddresses) {
+				if (!this.eMailAddresses.contains(email)) {
+					this.eMailAddresses.add(email);
 					this.journeyGUI.setEMailFound(this.eMailAddresses.size());
-					this.journeyGUI.println(eMailAddresses.get(i));
-					JourneyFileManager.getInstance().saveEmal(eMailAddresses.get(i));
+					this.journeyGUI.println(email);
+					JourneyFileManager.getInstance().saveEmal(email);
 				}
 			}
 		}
@@ -138,25 +147,25 @@ public class JourneyController {
 	 * @return URL of the next web page.
 	 */
 	public String getNextURLAddress() {
-		synchronized (this.linkSync) {
-			if (this.urlAddresses.size() > this.linkIndex) {
-				String temp = this.urlAddresses.get(this.linkIndex);
+		synchronized (this.linkLock) {
+			if (this.urlAddresses.size() > this.linkIndex + 1) {
 				this.linkIndex++;
-				this.journeyGUI.setURLChecked(this.linkIndex);
+				this.journeyGUI.setURLChecked(this.linkIndex + 1);
 				this.journeyGUI.setInQueue(this.urlAddresses.size() - this.linkIndex);
-				return temp;
+				return this.urlAddresses.get(this.linkIndex);
+			} else {
+				return null;
 			}
-			return null;
 		}
 	}
 
 	/**
-	 * Intended to be called when the JourneyGUI is ready- <br>
-	 * Starts the memory checker thread.
+	 * Intended to be called when the JourneyGUI is ready Starts the memory checker
+	 * thread.
 	 */
-	public void guiReady() {
-		synchronized (this.journeyMemChecker.getT()) {
-			this.journeyMemChecker.getT().notify();
+	public void onGUIReady() {
+		synchronized (this.journeyMemChecker.getThread()) {
+			this.journeyMemChecker.getThread().notify();
 		}
 	}
 }
