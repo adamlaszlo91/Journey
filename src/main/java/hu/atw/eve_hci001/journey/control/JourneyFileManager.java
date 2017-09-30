@@ -11,7 +11,7 @@ public class JourneyFileManager {
 
 	private JourneyFileManager() {
 		try {
-			this.writer = new FileWriter("emails_" + System.currentTimeMillis() + ".txt", true);
+			this.writer = new FileWriter("../emails_" + System.currentTimeMillis() + ".txt", true);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

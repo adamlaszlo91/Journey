@@ -2,6 +2,7 @@ package hu.atw.eve_hci001.journey.control;
 
 import java.util.ArrayList;
 
+import hu.atw.eve_hci001.journey.util.CombinedList;
 import hu.atw.eve_hci001.journey.view.JourneyGUI;
 
 /**
@@ -11,8 +12,8 @@ import hu.atw.eve_hci001.journey.view.JourneyGUI;
  * 
  */
 public class JourneyController {
-	private ArrayList<String> urlAddresses;
-	private ArrayList<String> eMailAddresses;
+	private CombinedList<String> urlAddresses;
+	private CombinedList<String> eMailAddresses;
 	private ArrayList<JourneyCrawler> journeyCrawlers;
 	private int maxThreadNum;
 	private JourneyGUI journeyGUI;
@@ -32,8 +33,8 @@ public class JourneyController {
 		this.journeyGUI.start();
 		this.journeyMemChecker = new JourneyMemChecker(journeyGUI);
 		this.journeyMemChecker.start();
-		this.urlAddresses = new ArrayList<String>();
-		this.eMailAddresses = new ArrayList<String>();
+		this.urlAddresses = new CombinedList<String>();
+		this.eMailAddresses = new CombinedList<String>();
 	}
 
 	/**
@@ -102,7 +103,7 @@ public class JourneyController {
 	 * @param links
 	 *            List of the new URL-s.
 	 */
-	public void addURLAddresses(ArrayList<String> links) {
+	public void addURLAddresses(CombinedList<String> links) {
 		synchronized (this.linkSync) {
 			for (int i = 0; i < links.size(); i++) {
 				if (!this.urlAddresses.contains(links.get(i))) {
@@ -118,7 +119,7 @@ public class JourneyController {
 	 * @param eMailAddresses
 	 *            List of e-mail addresses.
 	 */
-	public void addEMailAddresses(ArrayList<String> eMailAddresses) {
+	public void addEMailAddresses(CombinedList<String> eMailAddresses) {
 		synchronized (this.mailSync) {
 			for (int i = 0; i < eMailAddresses.size(); i++) {
 				if (!this.eMailAddresses.contains(eMailAddresses.get(i))) {

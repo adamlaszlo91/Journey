@@ -5,7 +5,6 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 
 import javax.net.ssl.SSLHandshakeException;
 
@@ -22,6 +21,7 @@ import com.google.re2j.Matcher;
 import com.google.re2j.Pattern;
 
 import hu.atw.eve_hci001.journey.util.AbstractRunnableThread;
+import hu.atw.eve_hci001.journey.util.CombinedList;
 
 /**
  * Checks a webpage with a given URL address and collects e-mail addresses and
@@ -34,8 +34,8 @@ public class JourneyCrawler extends AbstractRunnableThread {
 
 	private String currentLink;
 	private JourneyController journeyController;
-	private ArrayList<String> eMailAddresses;
-	private ArrayList<String> urlAddresses;
+	private CombinedList<String> eMailAddresses;
+	private CombinedList<String> urlAddresses;
 
 	private Document doc;
 	private Elements collectedLinks;
@@ -49,8 +49,8 @@ public class JourneyCrawler extends AbstractRunnableThread {
 	 */
 	public JourneyCrawler(JourneyController journeyController) {
 		this.journeyController = journeyController;
-		this.eMailAddresses = new ArrayList<String>();
-		this.urlAddresses = new ArrayList<String>();
+		this.eMailAddresses = new CombinedList<String>();
+		this.urlAddresses = new CombinedList<String>();
 	}
 
 	/**
