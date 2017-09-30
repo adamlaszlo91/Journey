@@ -8,6 +8,7 @@ package hu.atw.eve_hci001.journey.util;
  */
 public abstract class AbstractRunnableThread implements Runnable {
 	private Thread t;
+	protected boolean repeating = true; // True if the thread needs to do a repetitive job, false for run once
 
 	/**
 	 * Method to start the thread.
@@ -34,8 +35,12 @@ public abstract class AbstractRunnableThread implements Runnable {
 	}
 
 	public void run() {
-		Thread thisThread = Thread.currentThread();
-		while (this.t == thisThread) {
+		if (repeating) {
+			Thread thisThread = Thread.currentThread();
+			while (this.t == thisThread) {
+				performRun();
+			}
+		} else {
 			performRun();
 		}
 	}

@@ -18,6 +18,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.text.DefaultCaret;
 
 import hu.atw.eve_hci001.journey.control.JourneyController;
+import hu.atw.eve_hci001.journey.util.AbstractRunnableThread;
 
 /**
  * Graphical interface for Journey.
@@ -25,36 +26,35 @@ import hu.atw.eve_hci001.journey.control.JourneyController;
  * @author László Ádám
  * 
  */
-public class JourneyGUI implements Runnable, ActionListener {
-	private Thread t;
+public class JourneyGUI extends AbstractRunnableThread implements ActionListener {
 	private JourneyController journeyController;
-	private JButton start;
-	private JButton stop;
-	private JTextField url;
-	private JComboBox<String> threads;
-	private JTextArea eMails;
-	private JLabel label3;
-	private JLabel label4;
-	private JLabel label5;
-	private JLabel label6;
-	private JScrollPane scroll;
+	private JButton startButton;
+	private JButton stopButton;
+	private JTextField urlTextField;
+	private JComboBox<String> threadNumComboBox;
+	private JTextArea emailTextArea;
+	private JLabel linksCheckedLabel;
+	private JLabel linksQueuedLabel;
+	private JLabel emailsFoundLabel;
+	private JLabel memoryLabel;
+	private JScrollPane emailScroll;
 
 	/**
-	 * Constructor of the JourneyGUI class.
+	 * Constructor
 	 * 
 	 * @param journeyController
 	 *            The controller object.
 	 */
 	public JourneyGUI(JourneyController journeyController) {
 		this.journeyController = journeyController;
+		this.repeating = false;
 	}
 
 	/**
-	 * The run() method of the thread. CInitielizes the JourneyGUI elements and
-	 * waits for interaction.
+	 * Initializes the JourneyGUI elements and waits for interaction.
 	 */
-	public void run() {
-		JFrame frame = new JFrame("Journey 0.2.1");
+	public void performRun() {
+		JFrame frame = new JFrame("Journey v" + getClass().getPackage().getImplementationVersion());
 		frame.setSize(800, 600);
 		frame.setLayout(null);
 		frame.setResizable(false);
@@ -72,12 +72,12 @@ public class JourneyGUI implements Runnable, ActionListener {
 		label1.setVisible(true);
 		frame.add(label1);
 
-		this.url = new JTextField();
-		this.url.setSize(400, 20);
-		this.url.setLocation(55, 10);
-		this.url.setVisible(true);
-		this.url.addActionListener(this);
-		frame.add(this.url);
+		this.urlTextField = new JTextField();
+		this.urlTextField.setSize(400, 20);
+		this.urlTextField.setLocation(55, 10);
+		this.urlTextField.setVisible(true);
+		this.urlTextField.addActionListener(this);
+		frame.add(this.urlTextField);
 
 		JLabel label2 = new JLabel("Threads:");
 		label2.setLocation(480, 10);
@@ -85,51 +85,51 @@ public class JourneyGUI implements Runnable, ActionListener {
 		label2.setVisible(true);
 		frame.add(label2);
 
-		String[] darab = { "1", "2", "5", "10", "20", "40", "80" };
-		this.threads = new JComboBox<String>(darab);
-		this.threads.setLocation(535, 10);
-		this.threads.setSize(50, 20);
-		this.threads.setVisible(true);
-		frame.add(this.threads);
+		String[] threadNums = { "1", "2", "5", "10", "20", "40", "80", "160" };
+		this.threadNumComboBox = new JComboBox<String>(threadNums);
+		this.threadNumComboBox.setLocation(535, 10);
+		this.threadNumComboBox.setSize(50, 20);
+		this.threadNumComboBox.setVisible(true);
+		frame.add(this.threadNumComboBox);
 
-		this.start = new JButton("Start");
-		this.start.setLocation(610, 10);
-		this.start.setSize(80, 20);
-		this.start.setVisible(true);
-		this.start.addActionListener(this);
-		frame.add(this.start);
+		this.startButton = new JButton("Start");
+		this.startButton.setLocation(610, 10);
+		this.startButton.setSize(80, 20);
+		this.startButton.setVisible(true);
+		this.startButton.addActionListener(this);
+		frame.add(this.startButton);
 
-		this.stop = new JButton("Stop");
-		this.stop.setLocation(700, 10);
-		this.stop.setSize(80, 20);
-		this.stop.setVisible(true);
-		this.stop.addActionListener(this);
-		this.stop.setEnabled(false);
-		frame.add(this.stop);
+		this.stopButton = new JButton("Stop");
+		this.stopButton.setLocation(700, 10);
+		this.stopButton.setSize(80, 20);
+		this.stopButton.setVisible(true);
+		this.stopButton.addActionListener(this);
+		this.stopButton.setEnabled(false);
+		frame.add(this.stopButton);
 
-		this.label3 = new JLabel("0 link is checked");
-		this.label3.setLocation(10, 50);
-		this.label3.setSize(150, 20);
-		this.label3.setVisible(true);
-		frame.add(this.label3);
+		this.linksCheckedLabel = new JLabel("Links checked: 0");
+		this.linksCheckedLabel.setLocation(10, 50);
+		this.linksCheckedLabel.setSize(150, 20);
+		this.linksCheckedLabel.setVisible(true);
+		frame.add(this.linksCheckedLabel);
 
-		this.label4 = new JLabel("0 link is in queue");
-		this.label4.setLocation(170, 50);
-		this.label4.setSize(150, 20);
-		this.label4.setVisible(true);
-		frame.add(this.label4);
+		this.linksQueuedLabel = new JLabel("Links in queue: 0");
+		this.linksQueuedLabel.setLocation(170, 50);
+		this.linksQueuedLabel.setSize(150, 20);
+		this.linksQueuedLabel.setVisible(true);
+		frame.add(this.linksQueuedLabel);
 
-		this.label5 = new JLabel("0 email is found");
-		this.label5.setLocation(340, 50);
-		this.label5.setSize(150, 20);
-		this.label5.setVisible(true);
-		frame.add(this.label5);
+		this.emailsFoundLabel = new JLabel("Emails found: ");
+		this.emailsFoundLabel.setLocation(340, 50);
+		this.emailsFoundLabel.setSize(150, 20);
+		this.emailsFoundLabel.setVisible(true);
+		frame.add(this.emailsFoundLabel);
 
-		this.label6 = new JLabel("Memory (MB):  ? / ?     Max: ?");
-		this.label6.setLocation(550, 50);
-		this.label6.setSize(250, 20);
-		this.label6.setVisible(true);
-		frame.add(this.label6);
+		this.memoryLabel = new JLabel("Memory");
+		this.memoryLabel.setLocation(480, 50);
+		this.memoryLabel.setSize(320, 20);
+		this.memoryLabel.setVisible(true);
+		frame.add(this.memoryLabel);
 
 		JSeparator separator = new JSeparator();
 		separator.setLocation(10, 80);
@@ -137,36 +137,21 @@ public class JourneyGUI implements Runnable, ActionListener {
 		separator.setVisible(true);
 		frame.add(separator);
 
-		this.eMails = new JTextArea();
-		this.scroll = new JScrollPane(this.eMails);
-		this.scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		this.scroll.setLocation(10, 100);
-		this.scroll.setSize(775, 430);
-		this.scroll.setVisible(true);
-		this.eMails.setEditable(false);
+		this.emailTextArea = new JTextArea();
+		this.emailScroll = new JScrollPane(this.emailTextArea);
+		this.emailScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		this.emailScroll.setLocation(10, 100);
+		this.emailScroll.setSize(775, 430);
+		this.emailScroll.setVisible(true);
+		this.emailTextArea.setEditable(false);
 
-		DefaultCaret caret = (DefaultCaret) this.eMails.getCaret();
+		DefaultCaret caret = (DefaultCaret) this.emailTextArea.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
-		frame.add(this.scroll);
+		frame.add(this.emailScroll);
 
 		frame.setVisible(true);
 		this.journeyController.onGUIReady();
-	}
-
-	/**
-	 * Method to start the thread.
-	 */
-	public void start() {
-		this.t = new Thread(this);
-		this.t.start();
-	}
-
-	/**
-	 * MEthod to stop the thread.
-	 */
-	public void stop() {
-		this.t = null;
 	}
 
 	/**
@@ -174,22 +159,22 @@ public class JourneyGUI implements Runnable, ActionListener {
 	 */
 	public void actionPerformed(ActionEvent e) {
 		/* on Enter press or Start button press */
-		if (e.getSource() == this.start || e.getSource() == this.url) {
-			if (this.url.getText().equals("")) {
+		if (e.getSource() == this.startButton || e.getSource() == this.urlTextField) {
+			if (this.urlTextField.getText().equals("")) {
 				JOptionPane.showMessageDialog(null, "Please add a starting URL!", "Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			/* enabling/disabling buttons */
-			this.start.setEnabled(false);
-			this.stop.setEnabled(true);
-			int i = Integer.parseInt(this.threads.getSelectedItem().toString());
+			this.startButton.setEnabled(false);
+			this.stopButton.setEnabled(true);
+			int i = Integer.parseInt(this.threadNumComboBox.getSelectedItem().toString());
 			/* start crawling */
-			this.journeyController.startCrawling(this.url.getText(), i);
+			this.journeyController.startCrawling(this.urlTextField.getText(), i);
 		}
-		if (e.getSource() == this.stop) {
+		if (e.getSource() == this.stopButton) {
 			/* enabling/disabling buttons */
-			this.stop.setEnabled(false);
-			this.start.setEnabled(true);
+			this.stopButton.setEnabled(false);
+			this.startButton.setEnabled(true);
 			/* stop crawling */
 			this.journeyController.stopCrawling();
 		}
@@ -202,28 +187,28 @@ public class JourneyGUI implements Runnable, ActionListener {
 	 *            The text to be printed.
 	 */
 	public synchronized void println(String s) {
-		String text = this.eMails.getText();
-		this.eMails.setText(text + "\n" + s);
+		String text = this.emailTextArea.getText();
+		this.emailTextArea.setText(text + "\n" + s);
 	}
 
 	public void setURLChecked(int i) {
-		this.label3.setText(i + " link(s) are checked");
+		this.linksCheckedLabel.setText("Links checked: " + i);
 	}
 
 	public void setInQueue(int i) {
-		this.label4.setText(i + " link(s) are in queue");
+		this.linksQueuedLabel.setText("Links in queue: " + i);
 	}
 
 	public void setEMailFound(int i) {
-		this.label5.setText(i + " email(s) are found");
+		this.emailsFoundLabel.setText("Emails found: " + i);
 	}
 
 	public void clearOutput() {
-		this.eMails.setText("");
+		this.emailTextArea.setText("");
 	}
 
 	/**
-	 * Set informationd about the memory state.
+	 * Show information about the memory state.
 	 * 
 	 * @param used
 	 *            Uses memory.
@@ -233,7 +218,7 @@ public class JourneyGUI implements Runnable, ActionListener {
 	 *            The memory reserved by the JVM.
 	 */
 	public void setMemData(long used, long available, long max) {
-		this.label6.setText("Memory (MB):  " + used + " / " + available + "     Max: " + max);
+		this.memoryLabel.setText("Memory |    used:  " + used + " MB / " + available + " MB |    max: " + max + " MB");
 	}
 
 	/**
