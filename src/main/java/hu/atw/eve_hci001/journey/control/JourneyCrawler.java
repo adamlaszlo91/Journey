@@ -90,7 +90,7 @@ public class JourneyCrawler extends AbstractRunnableThread {
 				e.printStackTrace();
 			} finally {
 				/* Delivering gathered information and clearing containers */
-				this.journeyController.addEMailAddresses(this.eMailAddresses);
+				this.journeyController.addEMailAddresses(this.eMailAddresses, false);
 				this.journeyController.addURLAddresses(this.urlAddresses);
 				this.eMailAddresses.clear();
 				this.urlAddresses.clear();

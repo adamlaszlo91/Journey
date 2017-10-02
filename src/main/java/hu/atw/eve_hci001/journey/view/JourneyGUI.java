@@ -119,7 +119,7 @@ public class JourneyGUI extends AbstractRunnableThread implements ActionListener
 		this.linksQueuedLabel.setVisible(true);
 		frame.add(this.linksQueuedLabel);
 
-		this.emailsFoundLabel = new JLabel("Emails found: ");
+		this.emailsFoundLabel = new JLabel("Emails found: 0");
 		this.emailsFoundLabel.setLocation(340, 50);
 		this.emailsFoundLabel.setSize(150, 20);
 		this.emailsFoundLabel.setVisible(true);

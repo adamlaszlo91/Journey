@@ -1,6 +1,7 @@
 package hu.atw.eve_hci001.journey.control;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import hu.atw.eve_hci001.journey.util.CombinedList;
 import hu.atw.eve_hci001.journey.view.JourneyGUI;
@@ -12,6 +13,9 @@ import hu.atw.eve_hci001.journey.view.JourneyGUI;
  * 
  */
 public class JourneyController {
+
+	public static final int LINK_QUEUE_LIMIT = 100000;
+
 	private CombinedList<String> urlAddresses;
 	private CombinedList<String> eMailAddresses;
 	private ArrayList<JourneyCrawler> journeyCrawlers;
@@ -45,7 +49,7 @@ public class JourneyController {
 	 */
 	private void clean() {
 		this.urlAddresses.clear();
-		this.eMailAddresses.clear();
+		// this.eMailAddresses.clear();
 		this.journeyCrawlers.clear();
 		this.journeyGUI.setURLChecked(0);
 		this.journeyGUI.setEMailFound(0);
@@ -119,6 +123,10 @@ public class JourneyController {
 					this.urlAddresses.add(link);
 				}
 			}
+			if (this.urlAddresses.size() > LINK_QUEUE_LIMIT) {
+				cutLinkQueue();
+				journeyGUI.println("===== LINK QUEUE CLIPPED =====");
+			}
 		}
 	}
 
@@ -128,14 +136,19 @@ public class JourneyController {
 	 * @param eMailAddresses
 	 *            List of e-mail addresses.
 	 */
-	public void addEMailAddresses(CombinedList<String> eMailAddresses) {
+	public void addEMailAddresses(CombinedList<String> eMailAddresses, boolean imported) {
 		synchronized (this.mailLock) {
-			for (String email : eMailAddresses) {
-				if (!this.eMailAddresses.contains(email)) {
-					this.eMailAddresses.add(email);
-					this.journeyGUI.setEMailFound(this.eMailAddresses.size());
-					this.journeyGUI.println(email);
-					JourneyFileManager.getInstance().saveEmal(email);
+			if (imported) {
+				// Only load into memory
+				this.eMailAddresses.addAll(eMailAddresses);
+			} else {
+				for (String email : eMailAddresses) {
+					if (!this.eMailAddresses.contains(email)) {
+						this.eMailAddresses.add(email);
+						this.journeyGUI.setEMailFound(this.eMailAddresses.size());
+						this.journeyGUI.println(email);
+						JourneyFileManager.getInstance().exportEmail(email);
+					}
 				}
 			}
 		}
@@ -167,5 +180,16 @@ public class JourneyController {
 		synchronized (this.journeyMemChecker.getThread()) {
 			this.journeyMemChecker.getThread().notify();
 		}
+	}
+
+	/**
+	 * Preventing the consumption of all the memory, this method dtops randomly the
+	 * 90% of the queued links
+	 */
+	private void cutLinkQueue() {
+		CombinedList<String> cpy = new CombinedList<>(this.urlAddresses);
+		Collections.shuffle(cpy);
+		this.urlAddresses.clear();
+		this.urlAddresses.addAll(cpy.subList(0, this.urlAddresses.size() / 10));
 	}
 }
